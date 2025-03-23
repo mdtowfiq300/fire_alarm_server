@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Alert System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: red;
+        }
+        table {
+            width: 60%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+        th {
+            background-color: #ffcccb;
+        }
+        img {
+            margin-top: 20px;
+            width: 200px;
+        }
+        #send-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: block;
+            margin-left: auto;
+            margin-right: auto; /* This centers the button horizontally */
+        }
+        #send-button:hover {
+            background-color: #218838;
+        }
+    </style>
+    <script>
+        
+
+        // Function to send messages when button is clicked
+        function sendMessages() {
+            fetch('/send-message', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.status); // Show success message
+                })
+                .catch(err => {
+                    console.log('❌ Error:', err);
+                    alert('Error sending messages');
+                });
+        }
+
+        // Check if the WhatsApp client is ready (to show send button)
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('send-button').style.display = 'block';
+            }, 15000); // Wait 15 seconds for QR scan (adjust based on need)
+        };
+    </script>
+</head>
+<body>
+    <h1>🔥 Fire Alert System</h1>
+    <h3>Scan QR Code to Login</h3>
+    <img id="qr" src="qr.png" alt="Scan QR Code to Login">
+    
+    <h3>Emergency Contact List</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Phone Number</th>
+        </tr>
+        <tr><td>Towfiq</td><td>+8801725692402</td></tr>
+        <tr><td>Sadik</td><td>+8801521415875</td></tr>
+        
+    </table>
+
+    <!-- Send Message Button (hidden initially) -->
+    <button id="send-button" style="display:none;" onclick="sendMessages()">Send Message</button>
+    
+</body>
+</html>
