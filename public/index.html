@@ -50,16 +50,19 @@
 
         // Function to send messages when button is clicked
         function sendMessages() {
-            fetch('/send-message', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.status); // Show success message
-                })
-                .catch(err => {
-                    console.log('❌ Error:', err);
-                    alert('Error sending messages');
-                });
-        }
+    fetch('https://fire-alarm-server.onrender.com/send-message', {  // Use the full backend URL
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.status); // Show success message
+    })
+    .catch(err => {
+        console.log('❌ Error:', err);
+        alert('Error sending messages');
+    });
+}
+
 
         // Check if the WhatsApp client is ready (to show send button)
         window.onload = function() {
