@@ -57,6 +57,30 @@ client.on('disconnected', (reason) => {
     qrGenerated = false; // Reset flag if disconnected
 });
 
+// Define your contact list (Same as in your old code)
+const contacts = [
+    { name: "Towfiq", phone: "8801725692402" },
+    { name: "Sadik", phone: "8801521415875" },
+    // Add more contacts here as needed
+];
+
+// Send WhatsApp Message (Button Click)
+app.post('/send-message', async (req, res) => {
+    const message = '🔥 Fire Alert! Please take immediate action!';
+
+    // Iterate through the contacts and send the message
+    for (let contact of contacts) {
+        const phoneNumber = `+${contact.phone}@c.us`; // Format phone number
+        try {
+            await client.sendMessage(phoneNumber, message);
+            console.log(`Message sent to ${contact.name}`);
+        } catch (err) {
+            console.error(`Failed to send message to ${contact.name}:`, err);
+        }
+    }
+    res.json({ status: 'Messages sent successfully!' });
+});
+
 // Serve QR Code Image
 app.get('/qr', (req, res) => {
     const qrPath = path.join(__dirname, 'public', 'qr.png');
@@ -65,20 +89,6 @@ app.get('/qr', (req, res) => {
         res.sendFile(qrPath);
     } else {
         res.status(404).send('QR Code not available. Please wait...');
-    }
-});
-
-// Send WhatsApp Message (Button Click)
-app.post('/send-message', async (req, res) => {
-    const phoneNumber = '8801725692402'; // Replace with actual number
-    const message = '🔥 Fire Alert! Please take immediate action!';
-
-    try {
-        await client.sendMessage(`${phoneNumber}@c.us`, message);
-        res.json({ status: 'Message sent successfully!' });
-    } catch (err) {
-        console.error('Error sending message:', err);
-        res.status(500).json({ status: 'Failed to send message' });
     }
 });
 
