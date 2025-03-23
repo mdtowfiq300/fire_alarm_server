@@ -25,9 +25,20 @@ app.use(express.static(__dirname + '/public'));
 // Generate QR Code and save as image
 client.on('qr', qr => {
     console.log("📸 QR Code generated!");
-    qrcode.toFile(__dirname + '/public/qr.png', qr, function (err) {
-        if (err) console.error("❌ Error saving QR:", err);
-    });
+    qrcode.toDataURL(qr, (err, url) => {
+    if (err) console.error("❌ Error generating QR:", err);
+    else qrCodeData = url; // Store QR in memory
+});
+
+// Create a route to serve the QR code dynamically
+app.get('/qr', (req, res) => {
+    if (qrCodeData) {
+        res.send(`<img src="${qrCodeData}" alt="QR Code">`);
+    } else {
+        res.send("QR Code not available. Please wait...");
+    }
+});
+
 });
 
 // WhatsApp Ready Event
