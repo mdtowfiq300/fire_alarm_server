@@ -25,6 +25,7 @@ if (!fs.existsSync(publicFolder)) {
 }
 
 let qrGenerated = false; // Flag to track if a QR code has been generated
+let clientReady = false; // Track if the client is ready to send messages
 
 // Initialize WhatsApp client
 const client = new Client({
@@ -35,7 +36,7 @@ const client = new Client({
     }
 });
 
-// Generate QR Code and save it (only once)
+// Generate QR Code and save it
 client.on('qr', async (qr) => {
     // Only generate and save QR if it hasn't been generated before
     if (!qrGenerated) {
@@ -50,6 +51,7 @@ client.on('qr', async (qr) => {
 // WhatsApp Client Ready
 client.on('ready', () => {
     console.log('WhatsApp Client is ready!');
+    clientReady = true;  // Set the flag to true when the client is ready
 });
 
 // Handle Errors
@@ -61,6 +63,7 @@ client.on('auth_failure', () => {
 client.on('disconnected', (reason) => {
     console.log('Client disconnected:', reason);
     qrGenerated = false; // Reset flag if disconnected
+    clientReady = false; // Reset client ready state
 });
 
 // Serve QR Code Image (only if not generated before or after disconnection)
@@ -82,19 +85,16 @@ const contacts = [
 const message = '🔥 Fire Alert! Please take immediate action!';
 
 app.post('/send-message', async (req, res) => {
-    if (client.pupPage && !client.pupPage.isClosed()) {  // Ensure client is ready
+    if (clientReady) {  // Ensure client is ready
         try {
-            // Wait until the client is ready
-            client.on('ready', async () => {
-                // Loop through contacts and send messages
-                for (const contact of contacts) {
-                    const phoneNumber = `${contact.phone}@c.us`;
-                    console.log(`Sending message to ${contact.name}...`);
-                    await client.sendMessage(phoneNumber, message);
-                    console.log(`✅ Message sent to ${contact.name}`);
-                }
-                res.json({ status: 'Messages sent successfully!' });
-            });
+            // Loop through contacts and send messages
+            for (const contact of contacts) {
+                const phoneNumber = `${contact.phone}@c.us`;
+                console.log(`Sending message to ${contact.name}...`);
+                await client.sendMessage(phoneNumber, message);
+                console.log(`✅ Message sent to ${contact.name}`);
+            }
+            res.json({ status: 'Messages sent successfully!' });
         } catch (err) {
             console.error('Error sending message:', err);
             res.status(500).json({ status: 'Failed to send message', error: err.message });
