@@ -3,7 +3,12 @@ const express = require('express');
 const fs = require('fs');
 const qrcode = require('qrcode');
 const app = express();
+const cors = require('cors');
 const port = 3000;
+
+/ Enable CORS to allow GitHub-hosted HTML to request resources
+app.use(cors());
+app.use(express.static('public')); // Serve static files from 'public' folder
 
 // WhatsApp Client
 const client = new Client({ authStrategy: new LocalAuth() });
@@ -22,12 +27,16 @@ const message = "🔥 Fire Alert: Fire detected in the workplace! Take immediate
 app.use(express.static(__dirname + '/public'));
 
 
-// Generate QR Code and save as image
-client.on('qr', qr => {
-    console.log("📸 QR Code generated!");
-    qrcode.toFile(__dirname + '/public/qr.png', qr, function (err) {
-        if (err) console.error("❌ Error saving QR:", err);
-    });
+
+// Serve QR Code Image
+app.get('/qr', (req, res) => {
+    const qrPath = path.join(__dirname, 'public', 'qr.png');
+
+    if (fs.existsSync(qrPath) && qrGenerated) {
+        res.sendFile(qrPath);
+    } else {
+        res.status(404).send('QR Code not available. Please wait...');
+    }
 });
 
 // WhatsApp Ready Event
