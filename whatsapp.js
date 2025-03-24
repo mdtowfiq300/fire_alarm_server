@@ -4,11 +4,18 @@ const fs = require('fs');
 const path = require('path');
 const qrcode = require('qrcode'); // To generate QR code
 const cors = require('cors'); // Allows requests from different domains
-const port = 3000;
+const port = process.env.PORT || 3000;
 const app = express();
 
-// Enable CORS to allow GitHub-hosted HTML to request resources
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+    origin: '*',  // Allow requests from any origin
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+};
+
+// Enable CORS with specific options
+app.use(cors(corsOptions));
 app.use(express.static('public')); // Serve static files from 'public' folder
 
 // Ensure the 'public' folder exists
@@ -72,7 +79,7 @@ const contacts = [
 const message = '🔥 Fire Alert! Please take immediate action!';
 
 app.post('/send-message', async (req, res) => {
-    if (client.isReady()) {  // Use isReady instead of checking pupPage
+    if (client.pupPage && !client.pupPage.isClosed()) {  // Check if WhatsApp client is ready
         try {
             // Loop through contacts and send messages
             for (const contact of contacts) {
