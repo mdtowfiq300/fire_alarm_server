@@ -69,16 +69,30 @@ app.get('/qr', (req, res) => {
 });
 
 // Send WhatsApp Message (Button Click)
-app.post('/send-message', async (req, res) => {
-    const phoneNumber = '8801725692402'; // Replace with actual number
-    const message = '🔥 Fire Alert! Please take immediate action!';
+const contacts = [
+    { name: "Towfiq", phone: "8801725692402" },
+    { name: "Sadik", phone: "8801521415875" },
+];
 
-    try {
-        await client.sendMessage(`+${phoneNumber}@c.us`, message);
-        res.json({ status: 'Message sent successfully!' });
-    } catch (err) {
-        console.error('Error sending message:', err);
-        res.status(500).json({ status: 'Failed to send message' });
+const message = '🔥 Fire Alert! Please take immediate action!';
+
+app.post('/send-message', async (req, res) => {
+    if (!client.pupPage || !client.pupPage.isClosed()) {
+        try {
+            // Loop through contacts and send messages
+            for (const contact of contacts) {
+                const phoneNumber = `${contact.phone}@c.us`;
+                console.log(`Sending message to ${contact.name}...`);
+                await client.sendMessage(phoneNumber, message);
+                console.log(`✅ Message sent to ${contact.name}`);
+            }
+            res.json({ status: 'Messages sent successfully!' });
+        } catch (err) {
+            console.error('Error sending message:', err);
+            res.status(500).json({ status: 'Failed to send message', error: err.message });
+        }
+    } else {
+        res.status(500).json({ status: 'WhatsApp client is not ready' });
     }
 });
 
