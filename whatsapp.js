@@ -96,10 +96,9 @@ app.post('/send-message', async (req, res) => {
 });
 
 // Start Express Server only when WhatsApp client is ready
-client.on('ready', () => {
-    app.listen(port, () => {
-        console.log(`Server running at http://localhost:${port}/`);
-    });
+// Start Express Server
+app.listen(port, () => {
+    console.log(`🚀 Server running at http://localhost:${port}`);
 });
 
 // Start WhatsApp Client
