@@ -19,12 +19,26 @@ if (!fs.existsSync(publicFolder)) {
 }
 
 let qrGenerated = false; // Flag to track if a QR code has been generated
+let isClientReady = false; // Track if the WhatsApp client is ready
+
+// Path to session folder
+const sessionPath = path.join(__dirname, 'auth');
+
+// **Delete session folder if needed** (for example, when there's an authentication failure)
+if (fs.existsSync(sessionPath)) {
+    console.log('Deleting old session data...');
+    fs.rmdirSync(sessionPath, { recursive: true }); // Remove the session data folder
+}
+
+// Puppeteer executable path (use system-installed Chromium for Render)
+const puppeteerExecutablePath = '/usr/bin/chromium-browser';  // Path to Chromium on Render
 
 // Initialize WhatsApp client with LocalAuth (to persist session)
 const client = new Client({
     authStrategy: new LocalAuth(), // Persistent session using LocalAuth
     puppeteer: {
         headless: true, // Run in headless mode (no visible browser)
+        executablePath: puppeteerExecutablePath, // Use system-installed Chromium
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
 });
@@ -32,11 +46,9 @@ const client = new Client({
 // Generate QR Code and save it to public folder
 client.on('qr', async (qr) => {
     console.log('QR Code received, generating image...');
-
     // Generate QR code and save it in 'public/qr.png'
     const qrPath = path.join(__dirname, 'public', 'qr.png');
     await qrcode.toFile(qrPath, qr, { width: 300 });
-
     qrGenerated = true;
     console.log('QR Code saved at:', qrPath);
 });
@@ -44,6 +56,7 @@ client.on('qr', async (qr) => {
 // WhatsApp Client Ready (successful login)
 client.on('ready', () => {
     console.log('WhatsApp Client is ready!');
+    isClientReady = true; // Mark client as ready
 });
 
 // Handle Authentication Failures
@@ -56,6 +69,7 @@ client.on('auth_failure', (message) => {
 client.on('disconnected', (reason) => {
     console.log('Client disconnected:', reason);
     qrGenerated = false; // Reset flag if disconnected
+    isClientReady = false; // Mark client as not ready
 });
 
 // Define your contact list (Same as in your old code)
@@ -65,20 +79,37 @@ const contacts = [
     // Add more contacts here as needed
 ];
 
+// Retry function for sending messages if the first attempt fails
+const sendMessageWithRetry = async (phoneNumber, message, retries = 3) => {
+    try {
+        await client.sendMessage(phoneNumber, message);
+        console.log(`Message sent to ${phoneNumber}`);
+    } catch (err) {
+        console.error(`Error sending message to ${phoneNumber}:`, err);
+        if (retries > 0) {
+            console.log(`Retrying... (${retries} attempts left)`);
+            await sendMessageWithRetry(phoneNumber, message, retries - 1);
+        } else {
+            console.log('Failed to send message after retries');
+        }
+    }
+};
+
 // Send WhatsApp Message (Button Click)
 app.post('/send-message', async (req, res) => {
     const message = '🔥 Fire Alert! Please take immediate action!';
 
+    // Check if the client is ready before sending the message
+    if (!isClientReady) {
+        return res.status(500).json({ status: 'Client not ready. Please wait for WhatsApp to be ready.' });
+    }
+
     // Iterate through the contacts and send the message
     for (let contact of contacts) {
         const phoneNumber = `+${contact.phone}@c.us`; // Format phone number
-        try {
-            await client.sendMessage(phoneNumber, message);
-            console.log(`Message sent to ${contact.name}`);
-        } catch (err) {
-            console.error(`Failed to send message to ${contact.name}:`, err);
-        }
+        await sendMessageWithRetry(phoneNumber, message); // Use retry logic
     }
+
     res.json({ status: 'Messages sent successfully!' });
 });
 
