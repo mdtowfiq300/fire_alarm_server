@@ -78,7 +78,7 @@ app.get('/qr', (req, res) => {
 // Send WhatsApp Message (Button Click)
 const contacts = [
     { name: "Towfiq", phone: "8801725692402" },
-    
+    { name: "Sadik", phone: "8801521415875" },
 ];
 
 const message = '🔥 Fire Alert! Please take immediate action!';
@@ -87,7 +87,7 @@ app.post('/send-message', async (req, res) => {
     if (clientReady) {  // Ensure client is ready
         try {
             console.log('Sending message...');
-            // Loop through contacts and send messages
+            // Loop through contacts and send messages sequentially
             for (const contact of contacts) {
                 const phoneNumber = `${contact.phone}@c.us`;
                 console.log(`Sending message to ${contact.name}...`);
