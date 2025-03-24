@@ -74,7 +74,7 @@ app.post('/send-message', async (req, res) => {
     const message = '🔥 Fire Alert! Please take immediate action!';
 
     try {
-        await client.sendMessage(`${phoneNumber}@c.us`, message);
+        await client.sendMessage(`+${phoneNumber}@c.us`, message);
         res.json({ status: 'Message sent successfully!' });
     } catch (err) {
         console.error('Error sending message:', err);
