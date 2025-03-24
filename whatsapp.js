@@ -7,15 +7,8 @@ const cors = require('cors'); // Allows requests from different domains
 const port = process.env.PORT || 3000;
 const app = express();
 
-// CORS configuration
-const corsOptions = {
-    origin: '*',  // Allow requests from any origin
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type'],
-};
-
-// Enable CORS with specific options
-app.use(cors(corsOptions));
+// Enable CORS to allow GitHub-hosted HTML to request resources
+app.use(cors());
 app.use(express.static('public')); // Serve static files from 'public' folder
 
 // Ensure the 'public' folder exists
@@ -27,9 +20,15 @@ if (!fs.existsSync(publicFolder)) {
 let qrGenerated = false; // Flag to track if a QR code has been generated
 let clientReady = false; // Track if the client is ready to send messages
 
+// Specify a persistent folder for session storage
+const sessionFolder = path.join(__dirname, 'sessions');
+
 // Initialize WhatsApp client
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth({
+        clientId: 'client',  // You can specify a custom session folder here
+        sessionData: sessionFolder // Ensuring session data is stored in a persistent folder
+    }),
     puppeteer: {
         headless: true, // Run in headless mode (no visible browser)
         args: ['--no-sandbox', '--disable-setuid-sandbox']
