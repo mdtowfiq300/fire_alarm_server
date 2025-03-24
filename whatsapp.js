@@ -30,7 +30,7 @@ let qrGenerated = false; // Flag to track if a QR code has been generated
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        headless: true, // Run in headless mode (no visible browser)
+        headless: false, // Run in headless mode (no visible browser)
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
 });
