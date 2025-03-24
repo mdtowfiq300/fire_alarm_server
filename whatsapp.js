@@ -38,20 +38,17 @@ const client = new Client({
 
 // Generate QR Code and save it
 client.on('qr', async (qr) => {
-    // Only generate and save QR if it hasn't been generated before
-    if (!qrGenerated) {
-        console.log('QR Code received, generating image...');
-        const qrPath = path.join(__dirname, 'public', 'qr.png');
-        await qrcode.toFile(qrPath, qr, { width: 300 });
-        qrGenerated = true; // Mark that QR code is generated
-        console.log('QR Code saved at:', qrPath);
-    }
+    console.log('QR Code received, generating image...');
+    const qrPath = path.join(__dirname, 'public', 'qr.png');
+    await qrcode.toFile(qrPath, qr, { width: 300 });
+    qrGenerated = true; // Mark that QR code is generated
+    console.log('QR Code saved at:', qrPath);
 });
 
 // WhatsApp Client Ready
 client.on('ready', () => {
     console.log('WhatsApp Client is ready!');
-    clientReady = true;  // Set the flag to true when the client is ready
+    clientReady = true; // Mark client as ready
 });
 
 // Handle Errors
@@ -70,8 +67,10 @@ client.on('disconnected', (reason) => {
 app.get('/qr', (req, res) => {
     const qrPath = path.join(__dirname, 'public', 'qr.png');
     if (fs.existsSync(qrPath) && qrGenerated) {
+        console.log('Serving QR code...');
         res.sendFile(qrPath);
     } else {
+        console.log('QR Code not available. Please wait...');
         res.status(404).send('QR Code not available. Please wait...');
     }
 });
@@ -87,11 +86,12 @@ const message = '🔥 Fire Alert! Please take immediate action!';
 app.post('/send-message', async (req, res) => {
     if (clientReady) {  // Ensure client is ready
         try {
+            console.log('Sending message...');
             // Loop through contacts and send messages
             for (const contact of contacts) {
                 const phoneNumber = `${contact.phone}@c.us`;
                 console.log(`Sending message to ${contact.name}...`);
-                await client.sendMessage(phoneNumber, message);
+                await client.sendMessage(phoneNumber, message);  // Send message to contact
                 console.log(`✅ Message sent to ${contact.name}`);
             }
             res.json({ status: 'Messages sent successfully!' });
@@ -100,6 +100,7 @@ app.post('/send-message', async (req, res) => {
             res.status(500).json({ status: 'Failed to send message', error: err.message });
         }
     } else {
+        console.log('Client is not ready yet');
         res.status(500).json({ status: 'WhatsApp client is not ready' });
     }
 });
