@@ -31,7 +31,7 @@ if (fs.existsSync(sessionPath)) {
 }
 
 // **Use the executable path from the environment variable**
-const puppeteerExecutablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';  // Default to /usr/bin/chromium if env var is not set
+const puppeteerExecutablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser';  // Default to /usr/bin/chromium if env var is not set
 
 // Initialize WhatsApp client with LocalAuth (to persist session)
 const client = new Client({
