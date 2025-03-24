@@ -30,15 +30,15 @@ if (fs.existsSync(sessionPath)) {
     fs.rmdirSync(sessionPath, { recursive: true }); // Remove the session data folder
 }
 
-// Puppeteer executable path (use system-installed Chromium for Render)
-const puppeteerExecutablePath = '/usr/bin/chromium-browser';  // Path to Chromium on Render
+// **Use the executable path from the environment variable**
+const puppeteerExecutablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';  // Default to /usr/bin/chromium if env var is not set
 
 // Initialize WhatsApp client with LocalAuth (to persist session)
 const client = new Client({
     authStrategy: new LocalAuth(), // Persistent session using LocalAuth
     puppeteer: {
         headless: true, // Run in headless mode (no visible browser)
-        executablePath: puppeteerExecutablePath, // Use system-installed Chromium
+        executablePath: puppeteerExecutablePath, // Use system-installed Chromium or the environment variable
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
 });
