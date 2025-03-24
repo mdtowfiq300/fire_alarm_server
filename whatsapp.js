@@ -20,16 +20,16 @@ if (!fs.existsSync(publicFolder)) {
 
 let qrGenerated = false; // Flag to track if a QR code has been generated
 
-// Initialize WhatsApp client
+// Initialize WhatsApp client with LocalAuth (to persist session)
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth(), // Persistent session using LocalAuth
     puppeteer: {
         headless: true, // Run in headless mode (no visible browser)
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
 });
 
-// Generate QR Code and save it
+// Generate QR Code and save it to public folder
 client.on('qr', async (qr) => {
     console.log('QR Code received, generating image...');
 
@@ -41,14 +41,15 @@ client.on('qr', async (qr) => {
     console.log('QR Code saved at:', qrPath);
 });
 
-// WhatsApp Client Ready
+// WhatsApp Client Ready (successful login)
 client.on('ready', () => {
     console.log('WhatsApp Client is ready!');
 });
 
-// Handle Errors
-client.on('auth_failure', () => {
+// Handle Authentication Failures
+client.on('auth_failure', (message) => {
     console.log('Authentication failed. Restarting...');
+    console.log(message);
 });
 
 // Handle Disconnections
