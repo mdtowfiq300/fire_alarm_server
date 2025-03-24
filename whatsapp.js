@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const qrcode = require('qrcode'); // To generate QR code
 const cors = require('cors'); // Allows requests from different domains
-
+const port = 3000;
 const app = express();
 const port = process.env.PORT || 3000;
 
