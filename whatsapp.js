@@ -6,7 +6,7 @@ const qrcode = require('qrcode'); // To generate QR code
 const cors = require('cors'); // Allows requests from different domains
 const port = 3000;
 const app = express();
-const port = process.env.PORT || 3000;
+
 
 // Enable CORS to allow GitHub-hosted HTML to request resources
 app.use(cors());
