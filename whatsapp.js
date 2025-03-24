@@ -7,7 +7,6 @@ const cors = require('cors'); // Allows requests from different domains
 const port = 3000;
 const app = express();
 
-
 // Enable CORS to allow GitHub-hosted HTML to request resources
 app.use(cors());
 app.use(express.static('public')); // Serve static files from 'public' folder
@@ -32,11 +31,8 @@ const client = new Client({
 // Generate QR Code and save it
 client.on('qr', async (qr) => {
     console.log('QR Code received, generating image...');
-
-    // Generate QR code and save it in 'public/qr.png'
     const qrPath = path.join(__dirname, 'public', 'qr.png');
     await qrcode.toFile(qrPath, qr, { width: 300 });
-
     qrGenerated = true;
     console.log('QR Code saved at:', qrPath);
 });
@@ -76,7 +72,7 @@ const contacts = [
 const message = '🔥 Fire Alert! Please take immediate action!';
 
 app.post('/send-message', async (req, res) => {
-    if (client.pupPage && !client.pupPage.isClosed()) {
+    if (client.isReady()) {  // Use isReady instead of checking pupPage
         try {
             // Loop through contacts and send messages
             for (const contact of contacts) {
@@ -95,7 +91,6 @@ app.post('/send-message', async (req, res) => {
     }
 });
 
-// Start Express Server only when WhatsApp client is ready
 // Start Express Server
 app.listen(port, () => {
     console.log(`🚀 Server running at http://localhost:${port}`);
