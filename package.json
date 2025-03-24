@@ -1,13 +1,5 @@
 {
-  "name": "whatsapp-fire-alert-system",
-  "version": "1.0.0",
-  "description": "A fire alert system that sends WhatsApp messages",
-  "main": "whatsapp.js",
-  "scripts": {
-    "start": "node whatsapp.js",
-    "build": "apt-get update && apt-get install -y chromium"
-  },
-  "dependencies": {
+   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "qrcode": "^1.5.4",
