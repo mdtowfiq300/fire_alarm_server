@@ -35,13 +35,16 @@ const client = new Client({
     }
 });
 
-// Generate QR Code and save it
+// Generate QR Code and save it (only once)
 client.on('qr', async (qr) => {
-    console.log('QR Code received, generating image...');
-    const qrPath = path.join(__dirname, 'public', 'qr.png');
-    await qrcode.toFile(qrPath, qr, { width: 300 });
-    qrGenerated = true;
-    console.log('QR Code saved at:', qrPath);
+    // Only generate and save QR if it hasn't been generated before
+    if (!qrGenerated) {
+        console.log('QR Code received, generating image...');
+        const qrPath = path.join(__dirname, 'public', 'qr.png');
+        await qrcode.toFile(qrPath, qr, { width: 300 });
+        qrGenerated = true; // Mark that QR code is generated
+        console.log('QR Code saved at:', qrPath);
+    }
 });
 
 // WhatsApp Client Ready
@@ -73,7 +76,7 @@ app.get('/qr', (req, res) => {
 // Send WhatsApp Message (Button Click)
 const contacts = [
     { name: "Towfiq", phone: "8801725692402" },
-    
+    { name: "Sadik", phone: "8801521415875" },
 ];
 
 const message = '🔥 Fire Alert! Please take immediate action!';
