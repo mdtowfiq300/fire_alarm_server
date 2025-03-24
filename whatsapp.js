@@ -6,7 +6,7 @@ const app = express();
 const cors = require('cors');
 const port = 3000;
 
-/ Enable CORS to allow GitHub-hosted HTML to request resources
+// Enable CORS to allow GitHub-hosted HTML to request resources
 app.use(cors());
 app.use(express.static('public')); // Serve static files from 'public' folder
 
