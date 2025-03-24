@@ -57,10 +57,9 @@ client.on('disconnected', (reason) => {
     qrGenerated = false; // Reset flag if disconnected
 });
 
-// Serve QR Code Image
+// Serve QR Code Image (only if not generated before or after disconnection)
 app.get('/qr', (req, res) => {
     const qrPath = path.join(__dirname, 'public', 'qr.png');
-
     if (fs.existsSync(qrPath) && qrGenerated) {
         res.sendFile(qrPath);
     } else {
@@ -77,7 +76,7 @@ const contacts = [
 const message = '🔥 Fire Alert! Please take immediate action!';
 
 app.post('/send-message', async (req, res) => {
-    if (!client.pupPage || !client.pupPage.isClosed()) {
+    if (client.pupPage && !client.pupPage.isClosed()) {
         try {
             // Loop through contacts and send messages
             for (const contact of contacts) {
@@ -96,9 +95,11 @@ app.post('/send-message', async (req, res) => {
     }
 });
 
-// Start Express Server
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
+// Start Express Server only when WhatsApp client is ready
+client.on('ready', () => {
+    app.listen(port, () => {
+        console.log(`Server running at http://localhost:${port}/`);
+    });
 });
 
 // Start WhatsApp Client
