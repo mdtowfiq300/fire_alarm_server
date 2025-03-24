@@ -79,19 +79,16 @@ const contacts = [
 const message = '🔥 Fire Alert! Please take immediate action!';
 
 app.post('/send-message', async (req, res) => {
-    if (client.pupPage && !client.pupPage.isClosed()) {  // Ensure client is ready
+    if (client.pupPage && !client.pupPage.isClosed()) {  // Check if WhatsApp client is ready
         try {
-            // Wait until the client is ready
-            client.on('ready', async () => {
-                // Loop through contacts and send messages
-                for (const contact of contacts) {
-                    const phoneNumber = `${contact.phone}@c.us`;
-                    console.log(`Sending message to ${contact.name}...`);
-                    await client.sendMessage(phoneNumber, message);
-                    console.log(`✅ Message sent to ${contact.name}`);
-                }
-                res.json({ status: 'Messages sent successfully!' });
-            });
+            // Loop through contacts and send messages
+            for (const contact of contacts) {
+                const phoneNumber = `${contact.phone}@c.us`;
+                console.log(`Sending message to ${contact.name}...`);
+                await client.sendMessage(phoneNumber, message);
+                console.log(`✅ Message sent to ${contact.name}`);
+            }
+            res.json({ status: 'Messages sent successfully!' });
         } catch (err) {
             console.error('Error sending message:', err);
             res.status(500).json({ status: 'Failed to send message', error: err.message });
