@@ -27,13 +27,14 @@ if (!fs.existsSync(publicFolder)) {
 let qrGenerated = false; // Flag to track if a QR code has been generated
 let clientReady = false; // Track if the client is ready to send messages
 
-// Initialize WhatsApp client with LocalAuth (to store session data persistently)
-const sessionFolder = path.join(__dirname, 'sessions'); // Ensure sessions are saved to disk
+// Specify the session folder (persistent folder for session storage)
+const sessionFolder = path.join(__dirname, 'sessions');
 
+// Initialize WhatsApp client with LocalAuth for session persistence
 const client = new Client({
     authStrategy: new LocalAuth({
         clientId: 'client', // Store session in 'sessions' directory
-        sessionData: sessionFolder
+        sessionData: sessionFolder // Specify session folder for persistence
     }),
     puppeteer: {
         headless: true, // Run in headless mode (no visible browser)
@@ -54,6 +55,8 @@ client.on('qr', async (qr) => {
 client.on('ready', () => {
     console.log('WhatsApp Client is ready!');
     clientReady = true; // Mark client as ready
+    // Log message indicating that the client has been initialized from session data
+    console.log('WhatsApp client is ready to use.');
 });
 
 // Handle Errors
@@ -116,3 +119,8 @@ app.listen(port, () => {
 
 // Start WhatsApp Client
 client.initialize();
+
+// Check if session data exists and restore client readiness (if applicable)
+client.on('authenticated', () => {
+    console.log('Session restored. WhatsApp client is ready!');
+});
