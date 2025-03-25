@@ -27,9 +27,14 @@ if (!fs.existsSync(publicFolder)) {
 let qrGenerated = false; // Flag to track if a QR code has been generated
 let clientReady = false; // Track if the client is ready to send messages
 
-// Initialize WhatsApp client
+// Initialize WhatsApp client with LocalAuth (to store session data persistently)
+const sessionFolder = path.join(__dirname, 'sessions'); // Ensure sessions are saved to disk
+
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth({
+        clientId: 'client', // Store session in 'sessions' directory
+        sessionData: sessionFolder
+    }),
     puppeteer: {
         headless: true, // Run in headless mode (no visible browser)
         args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -78,7 +83,6 @@ app.get('/qr', (req, res) => {
 // Send WhatsApp Message (Button Click)
 const contacts = [
     { name: "Towfiq", phone: "8801725692402" },
-    
 ];
 
 const message = '🔥 Fire Alert! Please take immediate action!';
