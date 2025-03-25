@@ -13,76 +13,20 @@
         h1 {
             color: red;
         }
-        table {
-            width: 60%;
-            margin: 20px auto;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
+        #logs {
+            margin-top: 20px;
             padding: 10px;
-        }
-        th {
-            background-color: #ffcccb;
-        }
-        img {
-            margin-top: 20px;
-            width: 200px;
-        }
-        #send-button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: block;
-            margin-left: auto;
-            margin-right: auto; /* This centers the button horizontally */
-        }
-        #send-button:hover {
-            background-color: #218838;
-        }
-        #qr-status {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #ff5722;
+            border: 1px solid #ddd;
+            background-color: #f1f1f1;
+            max-height: 300px;
+            overflow-y: scroll;
+            text-align: left;
         }
     </style>
-    <script>
-        // Function to send messages when button is clicked
-        function sendMessages() {
-            fetch('https://fire-alarm-server.onrender.com/send-message', {  // Use the full backend URL
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.status); // Show success message
-            })
-            .catch(err => {
-                console.log('❌ Error:', err);
-                alert('Error sending messages');
-            });
-        }
-
-        // Check if the WhatsApp client is ready (to show send button)
-        window.onload = function() {
-            setTimeout(() => {
-                document.getElementById('send-button').style.display = 'block';
-                document.getElementById('qr-status').style.display = 'none';  // Hide QR scan status when button is shown
-            }, 15000); // Wait 15 seconds for QR scan
-        };
-    </script>
 </head>
 <body>
     <h1>🔥 Fire Alert System</h1>
-    <h3>Scan QR Code to Login</h3>
-    <img id="qr" src="https://fire-alarm-server.onrender.com/qr" alt="Scan QR Code to Login">
-
-    <!-- Status Message for QR Scan -->
-    <div id="qr-status">QR Scan In Progress...</div>
-
+    
     <h3>Emergency Contact List</h3>
     <table>
         <tr>
@@ -90,10 +34,44 @@
             <th>Phone Number</th>
         </tr>
         <tr><td>Towfiq</td><td>+8801725692402</td></tr>
-        <tr><td>Sadik</td><td>+8801521415875</td></tr>
     </table>
 
     <!-- Send Message Button (hidden initially) -->
-    <button id="send-button" style="display:none;" onclick="sendMessages()">Send Message</button>
+    <button id="send-button" onclick="sendMessages()">Send Message</button>
+
+    <!-- Logs section to display server logs -->
+    <div id="logs">
+        <h4>Server Logs:</h4>
+        <div id="log-container"></div>
+    </div>
+
+    <!-- Add Socket.io Client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();  // Connect to the WebSocket server
+
+        // Listen for incoming logs and display them in the "logs" div
+        socket.on('log', (message) => {
+            const logContainer = document.getElementById('log-container');
+            const logElement = document.createElement('p');
+            logElement.textContent = message;
+            logContainer.appendChild(logElement);
+            logContainer.scrollTop = logContainer.scrollHeight; // Scroll to the latest log
+        });
+
+        function sendMessages() {
+            fetch('https://fire-alarm-server.onrender.com/send-message', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.status);  // Show success message
+            })
+            .catch(err => {
+                console.log('❌ Error:', err);
+                alert('Error sending messages');
+            });
+        }
+    </script>
 </body>
 </html>
