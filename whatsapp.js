@@ -122,5 +122,5 @@ client.initialize();
 
 // Check if session data exists and restore client readiness (if applicable)
 client.on('authenticated', () => {
-    console.log('Session restored. WhatsApp client is ready!');
+    console.log('Session restored. WhatsApp client is getting ready!');
 });
