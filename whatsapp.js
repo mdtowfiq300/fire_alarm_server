@@ -2,21 +2,26 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const qrcode = require('qrcode'); // To generate QR code
-const cors = require('cors'); // Allows requests from different domains
+const qrcode = require('qrcode');
+const cors = require('cors');
+const http = require('http');
+const socketIo = require('socket.io');  // Import Socket.io
 const port = process.env.PORT || 3000;
 const app = express();
 
+// Create HTTP server for Socket.io to use
+const server = http.createServer(app);
+const io = socketIo(server);  // Initialize Socket.io
+
 // CORS configuration
 const corsOptions = {
-    origin: '*',  // Allow requests from any origin
+    origin: '*',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type'],
 };
 
-// Enable CORS with specific options
 app.use(cors(corsOptions));
-app.use(express.static('public')); // Serve static files from 'public' folder
+app.use(express.static('public'));  // Serve static files from 'public' folder
 
 // Ensure the 'public' folder exists
 const publicFolder = path.join(__dirname, 'public');
@@ -24,61 +29,64 @@ if (!fs.existsSync(publicFolder)) {
     fs.mkdirSync(publicFolder);
 }
 
-let qrGenerated = false; // Flag to track if a QR code has been generated
-let clientReady = false; // Track if the client is ready to send messages
+let qrGenerated = false;  // Flag to track if a QR code has been generated
+let clientReady = false;  // Track if the client is ready to send messages
 
-// Specify the session folder (persistent folder for session storage)
-const sessionFolder = path.join(__dirname, 'sessions');
+const sessionFolder = path.join(__dirname, 'sessions');  // Specify the session folder
 
 // Initialize WhatsApp client with LocalAuth for session persistence
 const client = new Client({
     authStrategy: new LocalAuth({
-        clientId: 'client', // Store session in 'sessions' directory
-        sessionData: sessionFolder // Specify session folder for persistence
+        clientId: 'client',
+        sessionData: sessionFolder  // Specify session folder for persistence
     }),
     puppeteer: {
-        headless: true, // Run in headless mode (no visible browser)
+        headless: true,  // Run in headless mode
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
 });
 
+// Function to emit logs via WebSocket
+const emitLog = (message) => {
+    console.log(message);  // Print log to the console as well
+    io.emit('log', message);  // Send log message to the client in real-time
+};
+
 // Generate QR Code and save it
 client.on('qr', async (qr) => {
-    console.log('QR Code received, generating image...');
     const qrPath = path.join(__dirname, 'public', 'qr.png');
     await qrcode.toFile(qrPath, qr, { width: 300 });
-    qrGenerated = true; // Mark that QR code is generated
-    console.log('QR Code saved at:', qrPath);
+    qrGenerated = true;  // Mark that QR code is generated
+    emitLog('QR Code generated and saved');
 });
 
 // WhatsApp Client Ready
 client.on('ready', () => {
-    console.log('WhatsApp Client is ready!');
-    clientReady = true; // Mark client as ready
-    // Log message indicating that the client has been initialized from session data
-    console.log('WhatsApp client is ready to use.');
+    emitLog('WhatsApp Client is ready!');
+    clientReady = true;  // Mark client as ready
+    emitLog('WhatsApp client is ready to use.');
 });
 
 // Handle Errors
 client.on('auth_failure', () => {
-    console.log('Authentication failed. Restarting...');
+    emitLog('Authentication failed. Restarting...');
 });
 
 // Handle Disconnections
 client.on('disconnected', (reason) => {
-    console.log('Client disconnected:', reason);
-    qrGenerated = false; // Reset flag if disconnected
-    clientReady = false; // Reset client ready state
+    emitLog(`Client disconnected: ${reason}`);
+    qrGenerated = false;  // Reset flag if disconnected
+    clientReady = false;  // Reset client ready state
 });
 
 // Serve QR Code Image (only if not generated before or after disconnection)
 app.get('/qr', (req, res) => {
     const qrPath = path.join(__dirname, 'public', 'qr.png');
     if (fs.existsSync(qrPath) && qrGenerated) {
-        console.log('Serving QR code...');
+        emitLog('Serving QR code...');
         res.sendFile(qrPath);
     } else {
-        console.log('QR Code not available. Please wait...');
+        emitLog('QR Code not available. Please wait...');
         res.status(404).send('QR Code not available. Please wait...');
     }
 });
@@ -93,28 +101,27 @@ const message = '🔥 Fire Alert! Please take immediate action!';
 app.post('/send-message', async (req, res) => {
     if (clientReady) {  // Ensure client is ready
         try {
-            console.log('Sending message...');
-            // Loop through contacts and send messages sequentially
+            emitLog('Sending message...');
             for (const contact of contacts) {
                 const phoneNumber = `${contact.phone}@c.us`;
-                console.log(`Sending message to ${contact.name}...`);
+                emitLog(`Sending message to ${contact.name}...`);
                 await client.sendMessage(phoneNumber, message);  // Send message to contact
-                console.log(`✅ Message sent to ${contact.name}`);
+                emitLog(`✅ Message sent to ${contact.name}`);
             }
             res.json({ status: 'Messages sent successfully!' });
         } catch (err) {
-            console.error('Error sending message:', err);
+            emitLog('Error sending message: ' + err);
             res.status(500).json({ status: 'Failed to send message', error: err.message });
         }
     } else {
-        console.log('Client is not ready yet');
+        emitLog('Client is not ready yet');
         res.status(500).json({ status: 'WhatsApp client is not ready' });
     }
 });
 
 // Start Express Server
-app.listen(port, () => {
-    console.log(`🚀 Server running at http://localhost:${port}`);
+server.listen(port, () => {
+    emitLog(`🚀 Server running at http://localhost:${port}`);
 });
 
 // Start WhatsApp Client
@@ -122,5 +129,5 @@ client.initialize();
 
 // Check if session data exists and restore client readiness (if applicable)
 client.on('authenticated', () => {
-    console.log('Session restored. WhatsApp client is getting ready!');
+    emitLog('Session restored. WhatsApp client is getting ready!');
 });
